@@ -10,7 +10,7 @@ export default function EquityChart({ai,btc,basket}:{ai:SeriesPoint[];btc?:Serie
      layout:{background:{type:ColorType.Solid,color:'#fbfaf6'},textColor:'#73766d',fontFamily:'IBM Plex Mono, monospace',fontSize:11},
      grid:{vertLines:{color:'#edeae2'},horzLines:{color:'#edeae2'}},
      rightPriceScale:{borderColor:'#d1cdc0'},timeScale:{borderColor:'#d1cdc0',timeVisible:true,secondsVisible:false},
-     localization:{priceFormatter:n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+     localization:{priceFormatter:(n:number)=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
    });
    const add=(points:SeriesPoint[],color:string,name:string)=>{
      const line=chart.addSeries(LineSeries,{color,lineWidth:2,title:name,priceLineVisible:false,lastValueVisible:true});

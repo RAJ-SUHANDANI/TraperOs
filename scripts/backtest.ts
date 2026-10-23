@@ -46,7 +46,7 @@ async function main(){
      if(!c||positions.some(p=>p.symbol===symbol))continue;
      const q={symbol,bid:c.open*.9999,ask:c.open*1.0001,receivedAt:t};
      const fake={...portfolio};
-     const f=lookups.get(symbol);
+     const f=lookups.get(symbol as (typeof SYMBOLS)[number]);
      const prior=f?[...f.values()].filter(row=>row.openTime<t).slice(-80):[];
      const feature=deriveFeatures(symbol,prior);
      if(!feature)continue;

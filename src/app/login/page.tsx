@@ -11,7 +11,7 @@ export default function Login(){
  async function signIn(e:React.FormEvent<HTMLFormElement>){
   e.preventDefault();setPending(true);setMessage('');
   if(!client){setMessage('Supabase is not configured. Follow README deployment steps.');setPending(false);return;}
-  const {error}=await client.auth.signInWithOtp({email,emailRedirectTo:window.location.origin+'/dashboard'});
+  const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.origin+'/dashboard'}});
   setMessage(error?error.message:'Check your inbox for a secure sign-in link. Only the configured owner can read the ledger.');
   setPending(false);
  }
