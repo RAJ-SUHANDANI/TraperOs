@@ -1,0 +1,30 @@
+name: Historical replay (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: Historical lookback (days)
+        type: choice
+        options: ['7', '30', '60', '90']
+        default: '30'
+        required: true
+jobs:
+  historical-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Fetch public Binance candles and replay deterministic strategy
+        run: npm run backtest -- ${{ inputs.days }} > backtest-report.json
+      - name: Publish replay metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-report
+          path: backtest-report.json
+          retention-days: 14
