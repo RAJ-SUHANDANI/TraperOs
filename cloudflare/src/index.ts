@@ -1,7 +1,7 @@
 // Scheduler only. Heavy market computations run in authenticated Next.js Node functions.
 interface Env { TRAPEROS_WORKER_URL: string; CRON_SECRET: string; }
 export default {
- async scheduled(_event: ScheduledEvent,env:Env,ctx:ExecutionContext){
+ async scheduled(_event: unknown,env:Env,ctx:{waitUntil(promise:Promise<void>):void}){
    ctx.waitUntil((async()=>{
      if(!env.TRAPEROS_WORKER_URL.startsWith('https://')||env.CRON_SECRET.length<24)
        throw new Error('Missing secure cron environment');

@@ -34,13 +34,13 @@ async function managePosition(p:Position,q:Quote,portfolio:Portfolio){
     const history=await candles(p.symbol,'1m',Math.min(500,Math.max(2,Math.ceil((Date.now()-start)/60000)+2)),start);
     let expected=start;
     for(const c of history){
-      if(c.openTime>expected+60000){await pause(portfolio,'MISSING_CANDLES','Missing 1-minute execution evidence for '+p.symbol);return;}
+      if(c.openTime>expected){await pause(portfolio,'MISSING_CANDLES','Missing 1-minute execution evidence for '+p.symbol);return;}
       if(c.openTime<start)continue;
       expected=c.openTime+60000;
       const result=candleExit(p,c);
       if(result){reconstructed={...result,eventId:String(c.openTime)};break;}
     }
-    if(history.length&&history.at(-1)!.openTime+120000<Date.now()){
+    if(!history.length||history.at(-1)!.openTime+120000<Date.now()){
       await pause(portfolio,'MISSING_CANDLES','1-minute history too old for '+p.symbol);return;
     }
   }
@@ -105,6 +105,10 @@ async function evaluatePortfolio(p:Portfolio,ranked:Features[],quotes:Record<str
     catch(e){await event(p.id,'error','EXIT_MONITOR_ERROR',e instanceof Error?e.message:String(e));}
   }
   positions=await getPositions(p.id);
+  // A stop/target sell changes cash; refresh the ledger before marking equity or sizing entries.
+  const {data:updated,error:refreshError}=await db().from('portfolios').select('*').eq('id',p.id).single();
+  if(refreshError)throw refreshError;
+  Object.assign(p,updated);
   if(positions.some(x=>!quotes[x.symbol])){
     await event(p.id,'error','INCOMPLETE_MARK','Unable to mark every open position; new entries disabled');
     return;

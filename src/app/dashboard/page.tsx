@@ -2,7 +2,7 @@
 import {useCallback,useEffect,useMemo,useState} from 'react';
 import Link from 'next/link';
 import {createClient,type Session} from '@supabase/supabase-js';
-import {Activity,ArrowLeftRight,BookOpen,ChartNoAxesCombined,CirclePause,LockKeyhole,Play,Plus,Shield,SignOut} from 'lucide-react';
+import {Activity,ArrowLeftRight,BookOpen,ChartNoAxesCombined,CirclePause,LockKeyhole,Play,Plus,Shield,LogOut} from 'lucide-react';
 import EquityChart,{type SeriesPoint} from '@/components/EquityChart';
 
 type Portfolio={id:string;kind:string;cash:number;initial_cash:number;is_paused:boolean;pause_reason:string|null;day_start_equity:number;challenge_ends_at:string|null};
@@ -70,7 +70,7 @@ export default function Dashboard(){
   <aside className="sidebar">
    <Link href="/" className="logo"><span className="mark">T</span>TraperOS</Link>
    <nav>{[{name:'Overview',icon:ChartNoAxesCombined},{name:'Positions',icon:Activity},{name:'Journal',icon:ArrowLeftRight},{name:'AI decisions',icon:BookOpen},{name:'Operations',icon:Shield}].map(item=><button key={item.name} className={'side-link '+(tab===item.name?'active':'')} onClick={()=>setTab(item.name)} style={{background:tab===item.name?'#e1e5db':'transparent',borderTop:0,borderRight:0,borderBottom:0,textAlign:'left',width:'100%',cursor:'pointer'}}><item.icon size={15}/>{item.name}</button>)}</nav>
-   <div className="side-bottom"><button className="side-link" onClick={async()=>{await supabase?.auth.signOut();setSession(null);}} style={{border:0,background:'transparent'}}><SignOut size={15}/> Sign out</button><div className="micro muted" style={{marginTop:12}}>PAPER ONLY · NO LEVERAGE</div></div>
+   <div className="side-bottom"><button className="side-link" onClick={async()=>{await supabase?.auth.signOut();setSession(null);}} style={{border:0,background:'transparent'}}><LogOut size={15}/> Sign out</button><div className="micro muted" style={{marginTop:12}}>PAPER ONLY · NO LEVERAGE</div></div>
   </aside>
   <main className="main">
    <div className="main-top"><span className="micro muted">TRADING OPERATIONS / PRIVATE</span><span className="pill"><span className={'dot '+(portfolio?.is_paused?'red':'')}/>{portfolio?.is_paused?'ENTRIES PAUSED':'PAPER ACCOUNT'}</span></div>
