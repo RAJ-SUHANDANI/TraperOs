@@ -1,0 +1,11 @@
+name = "traperos-scheduler"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[triggers]
+crons = ["* * * * *"]
+
+# Create secrets with:
+# npx wrangler secret put TRAPEROS_WORKER_URL
+# npx wrangler secret put CRON_SECRET
