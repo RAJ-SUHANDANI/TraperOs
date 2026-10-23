@@ -1,5 +1,8 @@
 name: Historical replay (manual)
 on:
+  push:
+    paths:
+      - .github/workflows/backtest.yml
   workflow_dispatch:
     inputs:
       days:
@@ -21,7 +24,7 @@ jobs:
           node-version: '22'
       - run: npm install --no-audit --no-fund
       - name: Fetch public Binance candles and replay deterministic strategy
-        run: npm run backtest -- ${{ inputs.days }} > backtest-report.json
+        run: npx tsx scripts/backtest.ts ${{ inputs.days || '30' }} | tee backtest-report.json
       - name: Publish replay metrics artifact
         uses: actions/upload-artifact@v4
         with:
