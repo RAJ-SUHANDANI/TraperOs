@@ -1,4 +1,4 @@
-name: Historical replay (manual)
+name: Historical replay (rules-only)
 on:
   workflow_dispatch:
     inputs:
