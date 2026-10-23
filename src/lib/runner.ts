@@ -117,8 +117,11 @@ async function evaluatePortfolio(p:Portfolio,ranked:Features[],quotes:Record<str
   const equity=markEquity(p,positions,prices);
   const day=utcDay();
   if(p.day_key!==day){
-    const {error}=await db().from('portfolios').update({day_key:day,day_start_equity:equity}).eq('id',p.id);
+    const resumeDailyPause=p.is_paused&&p.pause_reason==='Marked-to-market daily loss reached 4%';
+    const change={day_key:day,day_start_equity:equity,...(resumeDailyPause?{is_paused:false,pause_reason:null}:{})};
+    const {error}=await db().from('portfolios').update(change).eq('id',p.id);
     if(error)throw error;p.day_key=day;p.day_start_equity=equity;
+    if(resumeDailyPause){p.is_paused=false;p.pause_reason=null;await event(p.id,'info','DAILY_RESET','New UTC risk day; daily loss pause lifted');}
   }
   if(equity<=p.day_start_equity*(1-DAILY_LOSS_LIMIT)&&!p.is_paused)
     await pause(p,'DAILY_LOSS_LIMIT','Marked-to-market daily loss reached 4%');
