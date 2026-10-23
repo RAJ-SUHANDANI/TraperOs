@@ -7,7 +7,7 @@ export default {
        throw new Error('Missing secure cron environment');
      const response=await fetch(env.TRAPEROS_WORKER_URL,{method:'POST',
        headers:{Authorization:'Bearer '+env.CRON_SECRET,'Content-Type':'application/json'},
-       body:'{}',signal:AbortSignal.timeout(25000)});
+       body:'{}',signal:AbortSignal.timeout(100000)});
      if(!response.ok)throw new Error('TraperOS scheduler endpoint returned '+response.status);
    })());
  },

@@ -13,7 +13,7 @@ export async function GET(request:Request){
     const tables=[
       db.from('positions').select('*').in('portfolio_id',ids).order('opened_at',{ascending:false}).limit(100),
       db.from('fills').select('*').in('portfolio_id',ids).order('executed_at',{ascending:false}).limit(150),
-      db.from('ai_decisions').select('id,portfolio_id,symbol,candidate_id,model,status,error,created_at,response_payload').in('portfolio_id',ids).order('created_at',{ascending:false}).limit(70),
+      db.from('ai_decisions').select('id,portfolio_id,symbol,candidate_id,model,status,error,created_at,request_payload,response_payload').in('portfolio_id',ids).order('created_at',{ascending:false}).limit(70),
       db.from('signals').select('portfolio_id,candidate_id,symbol,action,result,reason,created_at').in('portfolio_id',ids).order('created_at',{ascending:false}).limit(150),
       db.from('equity_snapshots').select('portfolio_id,observed_minute,equity,cash,exposure').in('portfolio_id',ids).order('observed_minute',{ascending:false}).limit(1200),
       db.from('benchmark_snapshots').select('portfolio_id,observed_minute,btc_equity,basket_equity').in('portfolio_id',ids).order('observed_minute',{ascending:false}).limit(1200),

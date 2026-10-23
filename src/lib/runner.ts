@@ -198,14 +198,17 @@ export async function runTradingCycle():Promise<RunResult>{
     // No entries if even one asset quote is missing; missing quotes are still logged.
     if(Object.keys(quotes).length!==SYMBOLS.length)
       await event(null,'warning','MARKET_PARTIAL','Only '+Object.keys(quotes).length+' of 10 quotes available');
-    const histories=await Promise.allSettled(SYMBOLS.map(s=>candles(s,'15m',120)));
     const ranked:Features[]=[];
-    histories.forEach((result,i)=>{
-      if(result.status!=='fulfilled')return;
-      const history=result.value;
-      if(!history.length)return;
-      try{requireFreshCandle(history[history.length-1]);const f=deriveFeatures(SYMBOLS[i],history);if(f)ranked.push(f);}catch{}
-    });
+    // The 15-minute signal is actionable only in the first three minutes after close.
+    if(Date.now()%SIGNAL_INTERVAL_MS<3*60*1000){
+      const histories=await Promise.allSettled(SYMBOLS.map(s=>candles(s,'15m',120)));
+      histories.forEach((result,i)=>{
+        if(result.status!=='fulfilled')return;
+        const history=result.value;
+        if(!history.length)return;
+        try{requireFreshCandle(history[history.length-1]);const f=deriveFeatures(SYMBOLS[i],history);if(f)ranked.push(f);}catch{}
+      });
+    }
     ranked.sort((a,b)=>b.score-a.score||b.volumeRatio-a.volumeRatio);
     // Portfolio processing is independent, but all new entries are fail-closed on incomplete quote coverage.
     for(const p of portfolios){
