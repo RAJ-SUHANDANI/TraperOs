@@ -25,3 +25,11 @@ test('Equity includes open holdings',()=>{
  const p:Position={id:'x',portfolio_id:'p',symbol:'BTCUSDT',quantity:2,entry_price:100,stop_price:98,target_price:106,entry_fee:.2,opened_at:'2026-01-01',last_observed_at:null,signal_key:'s'};
  assert.equal(markEquity({cash:800},[p],{BTCUSDT:110}),1020);
 });
+
+test('Two-candle cooldown prevents immediate re-entry',async()=>{
+ const {eligibleAfterCooldown}=await import('../src/lib/strategies');
+ const exit=1000000,bar=15*60*1000;
+ assert.equal(eligibleAfterCooldown(exit+bar,exit),false);
+ assert.equal(eligibleAfterCooldown(exit+2*bar,exit),true);
+ assert.equal(eligibleAfterCooldown(exit+bar,undefined),true);
+});

@@ -12,3 +12,8 @@ export function deterministicDecision(f:Features,candidateId:string):Decision {
     invalidation:buy?'Initial ATR stop breached':'No position initiated',
     signal_tags:buy?['uptrend','momentum']:['none']};
 }
+
+/** Two full 15-minute candles of cooldown after an exit. */
+export function eligibleAfterCooldown(now:number,lastExitAt:number|undefined,periodMs=15*60*1000):boolean {
+  return lastExitAt===undefined || now-lastExitAt>=2*periodMs;
+}

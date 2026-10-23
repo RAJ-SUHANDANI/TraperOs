@@ -5,7 +5,7 @@
  */
 import {candles} from '../src/lib/market';
 import {deriveFeatures} from '../src/lib/indicators';
-import {deterministicDecision,qualifies} from '../src/lib/strategies';
+import {deterministicDecision,qualifies,eligibleAfterCooldown} from '../src/lib/strategies';
 import {checkRisk,markEquity} from '../src/lib/risk';
 import {DEFAULT_FEE_RATE,DEFAULT_SLIPPAGE_RATE,INITIAL_CASH,SYMBOLS} from '../src/lib/config';
 import type {Candle,Portfolio,Position} from '../src/lib/types';
@@ -34,6 +34,7 @@ async function main(){
  const portfolio:Portfolio={id:'offline',user_id:'offline',kind:'rules',cash:INITIAL_CASH,initial_cash:INITIAL_CASH,created_at:new Date(start).toISOString(),
     is_paused:false,pause_reason:null,day_key:null,day_start_equity:INITIAL_CASH,challenge_ends_at:null};
  let positions:Position[]=[],pending:string[]=[],closed=0,wins=0,grossProfit=0,grossLoss=0,peak=INITIAL_CASH,maxDrawdown=0,totalFees=0;
+ const lastExit=new Map<string,number>();
  const equitySeries:{time:string;equity:number}[]=[];
  for(const t of times){
    const candlesNow=Object.fromEntries(SYMBOLS.map(s=>[s,lookups.get(s)?.get(t)]));
@@ -70,7 +71,7 @@ async function main(){
      if(!exit)continue;
      const fee=exit*p.quantity*DEFAULT_FEE_RATE,pnl=(exit-p.entry_price)*p.quantity-fee-p.entry_fee;
      portfolio.cash+=exit*p.quantity-fee;totalFees+=fee;
-     positions=positions.filter(x=>x.id!==p.id);closed++;
+     positions=positions.filter(x=>x.id!==p.id);lastExit.set(p.symbol,t);closed++;
      if(pnl>0){wins++;grossProfit+=pnl;}else grossLoss-=pnl;
    }
    const equity=markEquity(portfolio,positions,prices),day=new Date(t).toISOString().slice(0,10);
@@ -82,7 +83,7 @@ async function main(){
    const candidates=SYMBOLS.map(s=>{
      const hist=lookups.get(s);if(!hist)return null;
      const prior=[...hist.values()].filter(c=>c.openTime<=t).slice(-120);
-     const f=deriveFeatures(s,prior);return f&&qualifies(f)?f:null;
+     const f=deriveFeatures(s,prior);return f&&qualifies(f)&&eligibleAfterCooldown(t,lastExit.get(s))?f:null;
    }).filter(f=>f!==null).sort((a,b)=>b.score-a.score||b.volumeRatio-a.volumeRatio).slice(0,2);
    pending=candidates.filter(f=>!positions.some(p=>p.symbol===f.symbol)).map(f=>f.symbol);
  }

@@ -5,7 +5,7 @@ import {deriveFeatures} from './indicators';
 import {aiDecision} from './ai';
 import {buyPaper,sellPaper} from './execution';
 import {checkRisk,markEquity} from './risk';
-import {deterministicDecision,qualifies} from './strategies';
+import {deterministicDecision,qualifies,eligibleAfterCooldown} from './strategies';
 import type {Features,Portfolio,Position,Quote,Candle,Decision} from './types';
 
 type RunResult={status:string;message:string;durationMs:number};
@@ -128,8 +128,15 @@ async function evaluatePortfolio(p:Portfolio,ranked:Features[],quotes:Record<str
   await recordSnapshot(p,positions,quotes,minute);
   if(p.is_paused||p.challenge_ends_at&&Date.now()>=Date.parse(p.challenge_ends_at))return;
 
+  // A two-candle cooldown limits immediate churn after a completed position closes.
+  const {data:recentExits,error:cooldownError}=await db().from('fills').select('symbol,executed_at')
+    .eq('portfolio_id',p.id).eq('side','SELL')
+    .gte('executed_at',new Date(now-2*SIGNAL_INTERVAL_MS).toISOString());
+  if(cooldownError)throw cooldownError;
+  const lastExit=new Map<string,number>();
+  for(const fill of recentExits||[])lastExit.set(fill.symbol,Math.max(lastExit.get(fill.symbol)||0,Date.parse(fill.executed_at)));
   // The rules baseline and AI arm evaluate the SAME ranked completed-candle snapshots.
-  const eligible=ranked.filter(f=>qualifies(f)).slice(0,2);
+  const eligible=ranked.filter(f=>qualifies(f)&&eligibleAfterCooldown(now,lastExit.get(f.symbol))).slice(0,2);
   for(const f of eligible){
     if(positions.length>=3)break;
     const q=quotes[f.symbol];
